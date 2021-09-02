@@ -8,7 +8,7 @@
           (
       </button>
       <p>
-        {{ month }}
+        {{ months[month] }}
         <span v-if="year != todayYear">
            {{ year }}
         </span>
@@ -55,11 +55,14 @@
           >
             {{ day }}
           </div>
-          <Events
-              :events="events"
-              :day="day"
-              :date-context="dateContext"
-          />
+          <div
+              v-for="event in eventsList(day)"
+              :key="event.id"
+              class="event"
+              :class="event.type"
+          >
+            {{ event.title }}
+          </div>
         </div>
         <div
           v-for="(next_day, index) in daysInNextMonth"
@@ -78,24 +81,37 @@
 
 <script>
 import moment from 'moment';
-import Events from "@/components/Events";
 export default {
   name: "Calendar",
-  components: { Events },
-  props: {
-    events: {
-      type: Array,
-      default: () => []
-    }
-  },
   data () {
     return {
       dateContext: moment(),
       days_of_week: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
-      months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+      months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+      events: [
+        { id: 1, title: "Поход в кино", date: { year: 2021, month: 9, day: 5, hour: 3, minute: 30 }, type: 'success' },
+        { id: 2, title: "Поход в кино sgergerwger", date: { year: 2021, month: 9, day: 6, hour: 18, minute: 30 }, type: 'error' },
+        { id: 6, title: "Сессия парная", date: { year: 2021, month: 9, day: 6, hour: 18, minute: 30 }, type: 'warning' },
+        { id: 3, title: "Поход в кино", date: { year: 2021, month: 9, day: 15, hour: 5, minute: 0 }, type: 'warning' },
+        { id: 4, title: "Поход в кино", date: { year: 2021, month: 9, day: 12, hour: 8, minute: 15 }, type: 'error' },
+        { id: 5, title: "Поход в кино", date: { year: 2021, month: 9, day: 8, hour: 9, minute: 30 }, type: 'success' },
+      ]
     }
   },
   methods: {
+    eventsList (day) {
+      const events = this.events.filter(event =>
+          event.date.day === day &&
+          event.date.month === (this.dateContext.month() + 1) &&
+          event.date.year === this.dateContext.year()
+      ).sort(
+          (a,b) => (a.date.hour >= b.date.hour && a.date.minute >= b.date.minute) ?
+              1 : ((b.name > a.name && b.date.minute >= a.date.minute) ?
+                  -1 : 0)
+      )
+      console.log(events)
+      return events
+    },
     nextMonth () {
       this.dateContext = moment(this.dateContext).add(1, 'month');
     },
@@ -116,7 +132,7 @@ export default {
       return this.dateContext.format('YYYY');
     },
     month () {
-      return this.dateContext.format('MMMM')
+      return this.dateContext.month()
     },
     daysInMonth () {
       return this.dateContext.daysInMonth()
@@ -162,7 +178,6 @@ export default {
   width: 100%;
 }
 
-
 .calendar-main {
   display: flex;
   flex-direction: column;
@@ -189,8 +204,6 @@ export default {
   flex-wrap: wrap;
 }
 .month-days .day {
-  display: flex;
-  flex-direction: column;
   width: 120px;
   height: 120px;
   margin: 4px;
@@ -217,5 +230,30 @@ export default {
   border-color: #2b2c2b;
 }
 
+
+.event {
+  width: 100%;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  z-index: 555;
+}
+
+.event:hover {
+  overflow: visible;
+  width: fit-content;
+  min-width: 100%;
+}
+.success {
+  background-color: green;
+}
+
+.warning {
+  background-color: orange;
+}
+
+.error {
+  background-color: red;
+}
 
 </style>
