@@ -9,7 +9,7 @@
       </button>
       <p>
         {{ months[month] }}
-        <span v-if="year != todayYear">
+        <span v-if="year !== todayYear">
            {{ year }}
         </span>
       </p>
@@ -51,7 +51,7 @@
         >
           <div
               class="number"
-              :class="{'is-weekend': (firstDayOfMonth + day + 1) % 7 < 2}"
+              :class="{'is-weekend': (firstDayOfMonth + day) % 7 < 2}"
           >
             {{ day }}
           </div>
@@ -61,7 +61,9 @@
               class="event"
               :class="event.type"
           >
-            {{ event.title }}
+            <div class="event-text">
+              {{ event.date.hour }}:{{ event.date.minute }} {{ event.title }}
+            </div>
           </div>
         </div>
         <div
@@ -119,7 +121,7 @@ export default {
       this.dateContext = moment(this.dateContext).subtract(1, 'month');
     },
     classDay (date) {
-      if (this.year === this.todayYear && this.month === this.todayMonth && date === this.todayDay) {
+      if (this.year === this.todayYear && this.month === moment().month() && date === moment().get('date')) {
         return 'today'
       } else {
         const date_context = moment(this.dateContext).add(date - 2, 'd')
@@ -140,18 +142,12 @@ export default {
     daysInPreviousMonth () {
       return moment(this.dateContext).subtract(1, 'month').daysInMonth()
     },
-    firstDayOfMonth () {
-      let a = moment({day: 1}) //.weekday()
-      return a.weekday()
+    firstDayOfMonth: function () {
+      const firstDay = moment(this.dateContext).subtract((this.dateContext.get('date') - 1), 'days');
+      return firstDay.weekday();
     },
     daysInNextMonth () {
-      return 7 - (this.firstDayOfMonth + this.daysInMonth) % 7
-    },
-    todayDay () {
-      return moment().get('date')
-    },
-    todayMonth () {
-      return moment().format('MMMM')
+      return 7 - (this.firstDayOfMonth + this.daysInMonth - 1) % 7
     },
     todayYear () {
       return moment().format('YYYY');
@@ -223,7 +219,7 @@ export default {
   color: mediumpurple;
 }
 
-.today span {
+.today div {
   color: #42b983;
 }
 .month-days .day.today {
@@ -236,13 +232,17 @@ export default {
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: pre;
-  z-index: 555;
+  position: relative;
+  height: 20px;
+  margin-top: 2px;
 }
 
 .event:hover {
   overflow: visible;
   width: fit-content;
   min-width: 100%;
+  position: relative;
+
 }
 .success {
   background-color: green;
@@ -255,5 +255,17 @@ export default {
 .error {
   background-color: red;
 }
+.event-text {
+  position: absolute;
+  width: 120px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
+.event-text:hover {
+  overflow: visible;
+  width: fit-content;
+  z-index: 11
+}
 </style>
